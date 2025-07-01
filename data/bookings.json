@@ -1,0 +1,32 @@
+[
+  {
+    "id": "b1",
+    "guestName": "Mario Rossi",
+    "checkIn": "2025-07-10",
+    "checkOut": "2025-07-15",
+    "guests": 2,
+    "revenue": 500,
+    "status": "confirmed",
+    "notes": "Richiesta culla per bambino."
+  },
+  {
+    "id": "b2",
+    "guestName": "Luisa Bianchi",
+    "checkIn": "2025-07-20",
+    "checkOut": "2025-07-22",
+    "guests": 1,
+    "revenue": 180,
+    "status": "pending",
+    "notes": "Arrivo previsto in tarda serata."
+  },
+  {
+    "id": "b3",
+    "guestName": "Giovanni Verdi",
+    "checkIn": "2025-08-01",
+    "checkOut": "2025-08-07",
+    "guests": 4,
+    "revenue": 800,
+    "status": "confirmed",
+    "notes": "Richiesta parcheggio privato."
+  }
+]

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VitaDashboard - Debug Mode</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    
+    <!-- Script di debug per catturare errori di import -->
+    <script>
+      window.addEventListener('error', function(event) {
+        console.error('Global error caught:', event.error);
+        if (event.error && event.error.message && event.error.message.includes('does not provide an export')) {
+          console.error('Import error details:');
+          console.error('- Message:', event.error.message);
+          console.error('- Stack:', event.error.stack);
+          console.error('- Module:', event.filename);
+          
+          // Mostra un messaggio di debug
+          const debugDiv = document.createElement('div');
+          debugDiv.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #ff6b6b; color: white; padding: 20px; z-index: 9999;';
+          debugDiv.innerHTML = `
+            <h3>Import Error Detected</h3>
+            <p>${event.error.message}</p>
+            <p>Please run: <code>npm run clean-cache</code> to fix this issue.</p>
+          `;
+          document.body.appendChild(debugDiv);
+        }
+      });
+      
+      console.log('Debug mode active - monitoring for import errors...');
+    </script>
+    
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
