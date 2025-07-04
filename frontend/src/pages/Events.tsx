@@ -2,19 +2,8 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { Calendar, Clock, MapPin, Users, Plus, Bell, Edit, Trash2 } from 'lucide-react';
 import { apiService } from '../services/apiService';
-
-interface Event {
-  id: string;
-  title: string;
-  description?: string;
-  date: string;
-  time: string;
-  location?: string;
-  attendees?: number;
-  category: 'personal' | 'work' | 'health' | 'social' | 'travel' | 'other';
-  reminder: boolean;
-  reminderTime?: string;
-}
+import type { Event } from '../types';
+import { AddEventModal } from '../components/modals/AddEventModal';
 
 const Events = () => {
   const { t } = useLanguage();
@@ -23,6 +12,7 @@ const Events = () => {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
   const [view, setView] = useState<'list' | 'calendar'>('list');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchEvents();
@@ -39,14 +29,14 @@ const Events = () => {
       
     } catch (error) {
       console.error('Errore caricamento eventi:', error);
-      setError('Impossibile caricare gli eventi dal database JSON');
+      setError(t('events.loadError'));
     } finally {
       setLoading(false);
     }
   };
 
   const deleteEvent = async (id: string) => {
-    if (!confirm('Sei sicuro di voler eliminare questo evento?')) return;
+    if (!confirm(t('events.confirmDelete'))) return;
     
     try {
       // Elimina dal JSON tramite API
@@ -56,8 +46,12 @@ const Events = () => {
       setEvents(events.filter(e => e.id !== id));
     } catch (error) {
       console.error('Errore eliminazione evento:', error);
-      setError('Impossibile eliminare l\'evento');
+      setError(t('events.deleteError'));
     }
+  };
+
+  const handleAddEvent = () => {
+    setIsModalOpen(true);
   };
 
   const formatDate = (dateString: string) => {
@@ -108,21 +102,21 @@ const Events = () => {
   };
 
   const getCategoryLabel = (category: string) => {
-    const categories = {
-      work: 'Lavoro',
-      health: 'Salute',
-      social: 'Sociale',
-      travel: 'Viaggio',
-      personal: 'Personale',
-      other: 'Altro'
+    const categories: { [key: string]: string } = {
+      work: t('categories.work'),
+      health: t('categories.health'),
+      social: t('categories.social'),
+      travel: t('categories.travel'),
+      personal: t('categories.personal'),
+      other: t('categories.other')
     };
-    return categories[category as keyof typeof categories] || category;
+    return categories[category] || category;
   };
 
   const getDateLabel = (dateString: string) => {
-    if (isToday(dateString)) return 'Oggi';
-    if (isTomorrow(dateString)) return 'Domani';
-    if (isThisWeek(dateString)) return 'Questa settimana';
+    if (isToday(dateString)) return t('dates.today');
+    if (isTomorrow(dateString)) return t('dates.tomorrow');
+    if (isThisWeek(dateString)) return t('dates.thisWeek');
     return '';
   };
 
@@ -138,7 +132,7 @@ const Events = () => {
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-light dark:border-primary-dark"></div>
         <span className="ml-4 text-text-secondary-light dark:text-text-secondary-dark">
-          Caricamento eventi dal database JSON...
+          {t('events.loading')}
         </span>
       </div>
     );
@@ -148,28 +142,29 @@ const Events = () => {
     return (
       <div className="text-center p-8">
         <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 px-4 py-3 rounded">
-          <strong className="font-bold">Errore: </strong>
+          <strong className="font-bold">{t('common.error')}: </strong>
           <span>{error}</span>
         </div>
         <button 
           onClick={fetchEvents}
           className="mt-4 px-4 py-2 bg-primary-light dark:bg-primary-dark text-white rounded hover:opacity-90"
         >
-          Riprova
+          {t('common.retry')}
         </button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-text-primary-light dark:text-text-primary-dark">
             {t('events.title')}
           </h1>
           <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-1">
-            📅 Dati caricati da: <code>/data/eventi.json</code>
+            📅 {t('events.dataSource')}: <code>/data/eventi.json</code>
           </p>
         </div>
         <div className="flex gap-2">
@@ -177,9 +172,11 @@ const Events = () => {
             onClick={() => setView(view === 'list' ? 'calendar' : 'list')}
             className="px-4 py-2 bg-background-light dark:bg-background-dark text-text-primary-light dark:text-text-primary-dark rounded-lg border border-border-light dark:border-border-dark hover:bg-card-light dark:hover:bg-card-dark transition-colors"
           >
-            {view === 'list' ? 'Calendario' : 'Lista'}
+            {view === 'list' ? t('common.calendar') : t('common.list')}
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary-light dark:bg-primary-dark text-white rounded-lg hover:opacity-90 transition-opacity">
+          <button 
+            onClick={handleAddEvent}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-light dark:bg-primary-dark text-white rounded-lg hover:opacity-90 transition-opacity">
             <Plus size={16} />
             {t('events.addNew')}
           </button>
@@ -197,10 +194,7 @@ const Events = () => {
                 : 'bg-background-light dark:bg-background-dark text-text-secondary-light dark:text-text-secondary-dark hover:bg-card-light dark:hover:bg-card-dark'
             }`}
           >
-            {filterType === 'all' ? 'Tutti' : 
-             filterType === 'today' ? 'Oggi' :
-             filterType === 'week' ? 'Questa settimana' :
-             getCategoryLabel(filterType)}
+            {t(`events.filters.${filterType}`, { defaultValue: getCategoryLabel(filterType) })}
           </button>
         ))}
       </div>
@@ -248,90 +242,35 @@ const Events = () => {
             <p className="text-text-secondary-light dark:text-text-secondary-dark mb-4">
               {filter === 'all' ? 'Aggiungi il tuo primo evento.' : 'Nessun evento per il filtro selezionato.'}
             </p>
-            <button className="flex items-center gap-2 mx-auto px-4 py-2 bg-primary-light dark:bg-primary-dark text-white rounded-lg hover:opacity-90">
+            <button 
+              onClick={handleAddEvent}
+              className="flex items-center gap-2 mx-auto px-4 py-2 bg-primary-light dark:bg-primary-dark text-white rounded-lg hover:opacity-90">
               <Plus size={16} />
               Aggiungi evento
             </button>
           </div>
+        ) : view === 'list' ? (
+          <div className="bg-card-light dark:bg-card-dark p-4 rounded-xl shadow-soft">
+            <p className="text-center text-text-secondary-light dark:text-text-secondary-dark">
+              La vista calendario non è ancora implementata.
+            </p>
+          </div>
         ) : (
-          <div className="divide-y divide-border-light/30 dark:divide-border-dark/30">
-            {filteredEvents.map((event) => {
-              const dateLabel = getDateLabel(event.date);
-              return (
-                <div key={event.id} className="p-6 hover:bg-background-light/50 dark:hover:bg-background-dark/50 transition-colors">
-                  <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark mb-1">
-                            {event.title}
-                          </h3>
-                          {dateLabel && (
-                            <span className="inline-block px-2 py-1 bg-accent-light/10 dark:bg-accent-dark/10 text-accent-light dark:text-accent-dark text-xs font-medium rounded mb-2">
-                              {dateLabel}
-                            </span>
-                          )}
-                        </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(event.category)}`}>
-                          {getCategoryLabel(event.category)}
-                        </span>
-                      </div>
-                      
-                      {event.description && (
-                        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark mb-3">
-                          {event.description}
-                        </p>
-                      )}
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                        <div className="flex items-center gap-2">
-                          <Calendar size={16} />
-                          <span>{formatDate(event.date)}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock size={16} />
-                          <span>{formatTime(event.time)}</span>
-                        </div>
-                        {event.location && (
-                          <div className="flex items-center gap-2">
-                            <MapPin size={16} />
-                            <span className="truncate">{event.location}</span>
-                          </div>
-                        )}
-                        {event.attendees && (
-                          <div className="flex items-center gap-2">
-                            <Users size={16} />
-                            <span>{event.attendees} partecipanti</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {event.reminder && (
-                        <div className="flex items-center gap-2 mt-2 text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                          <Bell size={16} />
-                          <span>Promemoria: {event.reminderTime || '30min'} prima</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <button className="p-2 text-text-secondary-light dark:text-text-secondary-dark hover:text-primary-light dark:hover:text-primary-dark hover:bg-background-light dark:hover:bg-background-dark rounded transition-colors">
-                        <Edit size={16} />
-                      </button>
-                      <button 
-                        onClick={() => deleteEvent(event.id)}
-                        className="p-2 text-text-secondary-light dark:text-text-secondary-dark hover:text-red-500 hover:bg-background-light dark:hover:bg-background-dark rounded transition-colors">
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="bg-card-light dark:bg-card-dark p-4 rounded-xl shadow-soft">
+            <p className="text-center text-text-secondary-light dark:text-text-secondary-dark">
+              La vista calendario non è ancora implementata.
+            </p>
           </div>
         )}
       </div>
+
+      <AddEventModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onEventAdded={fetchEvents}
+      />
     </div>
+  </>
   );
 };
 

@@ -1,5 +1,5 @@
 // Test file to verify Booking import works correctly
-import type { Booking, BookingStatus, CreateBookingInput } from '@/types';
+import type { Booking, BookingStatus, CreateBookingInput } from './types';
 
 // Test that types are accessible
 const testBooking: Booking = {

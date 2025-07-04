@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Profile } from '@/types';
+import type { Profile } from '../types';
 import { useToast } from './useToast';
 import { useLanguage } from '../context/LanguageContext';
 import { apiService } from '../services/apiService';
@@ -7,6 +7,7 @@ import { apiService } from '../services/apiService';
 export const useProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showToast } = useToast();
   const { t } = useLanguage();
@@ -53,6 +54,7 @@ export const useProfile = () => {
   return { 
     profile, 
     loading, 
+    saving,
     error, 
     fetchProfile, 
     updateProfile,

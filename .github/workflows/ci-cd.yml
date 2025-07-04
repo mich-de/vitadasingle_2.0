@@ -1,0 +1,156 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Frontend Build and Test
+  frontend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run TypeScript type check
+      run: npm run type-check
+    
+    - name: Run ESLint
+      run: npm run lint
+    
+    - name: Build application
+      run: npm run build
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-build
+        path: frontend/dist/
+        retention-days: 7
+
+  # Code Quality Checks
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      run: cd frontend && npm ci
+    
+    - name: Check for English code compliance
+      run: |
+        echo "Checking for English code compliance..."
+        # Check for Italian comments/strings in code (basic check)
+        if grep -r "console\.log.*[àèìòù]" frontend/src/ || grep -r "//.*[àèìòù]" frontend/src/; then
+          echo "❌ Found Italian text in code. All code should be in English."
+          exit 1
+        fi
+        echo "✅ Code compliance check passed"
+    
+    - name: Check ISO 8601 date format compliance
+      run: |
+        echo "Checking for ISO 8601 date format compliance..."
+        # Check for hardcoded non-ISO dates
+        if grep -r "new Date.*[0-9]*/[0-9]*/[0-9]*" frontend/src/; then
+          echo "❌ Found non-ISO date format. Use ISO 8601 format (YYYY-MM-DD)."
+          exit 1
+        fi
+        echo "✅ Date format compliance check passed"
+
+  # Deploy to Vercel (Production)
+  deploy-vercel:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [frontend-test, code-quality]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build for production
+      run: npm run build
+      env:
+        NODE_ENV: production
+    
+    - name: Deploy to Vercel
+      uses: amondnet/vercel-action@v25
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        working-directory: ./frontend
+        vercel-args: '--prod'
+
+  # Deploy Preview (Feature branches)
+  deploy-preview:
+    if: github.event_name == 'pull_request'
+    needs: [frontend-test, code-quality]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build for preview
+      run: npm run build
+      env:
+        NODE_ENV: production
+    
+    - name: Deploy Preview to Vercel
+      uses: amondnet/vercel-action@v25
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        working-directory: ./frontend
+        github-comment: true

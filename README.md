@@ -1,64 +1,142 @@
-# VitaApp - Gestione della Vita da Single
+# VitaApp - Personal Life Management System
 
-VitaApp è un'applicazione completa per gestire tutti gli aspetti della vita da single in modo organizzato ed efficiente. Dall'amministrazione delle finanze personali alla pianificazione di eventi e alla gestione di documenti importanti, VitaApp è il tuo assistente personale digitale.
+A comprehensive React application for managing properties, vehicles, expenses, bookings, workouts, events, and documents. Built with TypeScript, Vite, and Tailwind CSS.
 
-## 🚀 Funzionalità Principali
+## 🚀 Features
 
-- **Gestione Finanziaria:** Tieni traccia delle tue spese, gestisci i budget e monitora i tuoi investimenti.
-- **Scadenze e Appuntamenti:** Non dimenticare mai una scadenza importante o un appuntamento.
-- **Archivio Documenti:** Conserva in modo sicuro tutti i tuoi documenti personali, come passaporti, patenti e certificati.
-- **Gestione Proprietà e Veicoli:** Amministra le tue proprietà immobiliari e i tuoi veicoli, incluse manutenzioni e assicurazioni.
-- **Pianificazione Eventi e Viaggi:** Organizza i tuoi eventi sociali, i viaggi e le prenotazioni.
-- **Salute e Benessere:** Tieni traccia dei tuoi allenamenti, delle diete e degli appuntamenti medici.
+- **Property Management**: Track real estate investments and residential properties
+- **Vehicle Management**: Monitor vehicle maintenance, insurance, and expenses
+- **Expense Tracking**: Categorize and analyze personal and business expenses
+- **B&B Booking Management**: Handle vacation rental bookings and revenue
+- **Workout Tracking**: Log fitness activities and monitor health progress
+- **Event Management**: Schedule and organize personal and professional events
+- **Document Storage**: Organize and categorize important documents
+- **Multi-language Support**: Available in English and Italian
 
-## 🛠️ Struttura del Progetto
+## 🛠️ Tech Stack
 
-Il progetto è suddiviso in due componenti principali: `frontend` e `backend`.
+- **Frontend**: React 19, TypeScript, Vite
+- **Styling**: Tailwind CSS
+- **State Management**: React Context API
+- **Routing**: React Router DOM
+- **Icons**: Lucide React
+- **Deployment**: Vercel
+- **Language Support**: English (primary), Italian
 
-- **`frontend/`**: Contiene l'applicazione client sviluppata con React e Vite. Questa è l'interfaccia utente con cui interagirai.
-- **`backend/`**: Include il server Node.js che gestisce la logica di business e l'interazione con i file di dati JSON.
-- **`data/`**: Memorizza i dati dell'applicazione in formato JSON. Ogni file corrisponde a una diversa categoria di informazioni.
+## 📁 Project Structure
 
-## ⚙️ Installazione
+```
+vitadasingle/
+├── frontend/               # React frontend application
+│   ├── src/
+│   │   ├── components/    # Reusable UI components
+│   │   ├── context/       # React Context providers
+│   │   ├── features/      # Feature-based organization
+│   │   ├── hooks/         # Custom React hooks
+│   │   ├── pages/         # Page components
+│   │   ├── services/      # API services
+│   │   ├── types/         # TypeScript definitions
+│   │   └── utils/         # Utility functions
+│   ├── public/            # Static assets
+│   └── vercel.json        # Vercel deployment config
+├── backend/               # Backend API (if applicable)
+└── data/                  # Data files and exports
+```
 
-Per avviare il progetto, è necessario installare le dipendenze sia per il frontend che per il backend.
+## 🚦 Getting Started
 
-1. **Clona il repository:**
-   ```bash
-   git clone https://github.com/tuo-username/vitadasingle.git
-   cd vitadasingle
-   ```
+### Prerequisites
 
-2. **Installa le dipendenze del backend:**
-   ```bash
-   cd backend
-   npm install
-   cd ..
-   ```
+- Node.js 18+
+- npm or yarn
+- Git
 
-3. **Installa le dipendenze del frontend:**
-   ```bash
-   cd frontend
-   npm install
-   cd ..
-   ```
+### Installation
 
-## ▶️ Esecuzione
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/vitadasingle.git
+cd vitadasingle/frontend
 
-Per eseguire l'applicazione, devi avviare sia il server backend che l'applicazione frontend.
+# Install dependencies
+npm install
 
-1. **Avvia il backend:**
-   ```bash
-   npm run start-backend
-   ```
+# Copy environment variables
+cp .env.example .env
 
-2. **Avvia il frontend:**
-   ```bash
-   npm run start-frontend
-   ```
+# Start development server
+npm run dev
+```
 
-Una volta avviati entrambi i servizi, puoi accedere all'applicazione aprendo il tuo browser all'indirizzo fornito dal server di sviluppo Vite (solitamente `http://localhost:5173`).
+Visit `http://localhost:5173` to view the application.
 
-## 🤝 Contribuire
+### Development Scripts
 
-Se desideri contribuire al progetto, sei il benvenuto! Apri una issue per discutere di nuove funzionalità o correzioni di bug, oppure invia una pull request con le tue modifiche.
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+npm run type-check   # TypeScript type checking
+```
+
+## 🌍 Internationalization
+
+The application supports multiple languages with automatic fallback:
+
+- **English (en)**: Primary language and fallback
+- **Italian (it)**: Secondary language
+
+Translation keys follow a hierarchical structure for better organization.
+
+## 📅 Date Handling
+
+All dates are stored in ISO 8601 format following best practices:
+
+- **Storage**: `2025-07-03` or `2025-07-03T17:45:00Z`
+- **Display**: Automatically formatted based on user locale
+- **Utilities**: Comprehensive date helpers for consistent handling
+
+## 🚢 Deployment
+
+### Vercel (Recommended)
+
+1. Connect your GitHub repository to Vercel
+2. Set up environment variables in Vercel dashboard
+3. Deploy automatically on every push to main branch
+
+### Manual Deployment
+
+```bash
+npm run build
+# Deploy 'dist' folder to your hosting provider
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 Code Guidelines
+
+- All code written in English (identifiers, comments, documentation)
+- ISO 8601 date format for all data storage
+- TypeScript with strict type checking
+- Functional components with hooks
+- Proper error handling and loading states
+- Conventional commit messages
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🐛 Issues & Support
+
+For bug reports and feature requests, please open an issue on GitHub.
+
+---
+
+*VitaApp - Simplifying life management, one feature at a time.*

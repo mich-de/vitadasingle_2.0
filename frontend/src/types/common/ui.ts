@@ -114,6 +114,18 @@ export interface TableColumn<T = any> {
   render?: (value: any, row: T) => React.ReactNode;
 }
 
+export interface Pagination {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+}
+
+export interface SortConfig {
+  key: string;
+  direction: 'ascending' | 'descending';
+}
+
 export interface TableProps<T = any> {
   data: T[];
   columns: TableColumn<T>[];

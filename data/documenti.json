@@ -7,7 +7,11 @@
     "category": "legal",
     "dateModified": "2025-06-20",
     "dateCreated": "2025-01-15",
-    "tags": ["contratto", "affitto", "milano"],
+    "tags": [
+      "contratto",
+      "affitto",
+      "milano"
+    ],
     "shared": false,
     "file": "contratto_affitto.pdf"
   },
@@ -19,7 +23,11 @@
     "category": "taxes",
     "dateModified": "2025-06-18",
     "dateCreated": "2025-03-30",
-    "tags": ["tasse", "2024", "redditi"],
+    "tags": [
+      "tasse",
+      "2024",
+      "redditi"
+    ],
     "shared": false,
     "file": "dichiarazione_redditi_2024.pdf"
   },
@@ -31,7 +39,11 @@
     "category": "financial",
     "dateModified": "2025-06-25",
     "dateCreated": "2025-01-01",
-    "tags": ["bilancio", "spese", "2025"],
+    "tags": [
+      "bilancio",
+      "spese",
+      "2025"
+    ],
     "shared": true,
     "file": "bilancio_familiare.xlsx"
   },
@@ -43,7 +55,11 @@
     "category": "insurance",
     "dateModified": "2025-06-10",
     "dateCreated": "2025-02-15",
-    "tags": ["assicurazione", "auto", "polizza"],
+    "tags": [
+      "assicurazione",
+      "auto",
+      "polizza"
+    ],
     "shared": false,
     "file": "assicurazione_auto.pdf"
   },
@@ -55,7 +71,11 @@
     "category": "medical",
     "dateModified": "2025-06-15",
     "dateCreated": "2025-06-15",
-    "tags": ["esami", "sangue", "salute"],
+    "tags": [
+      "esami",
+      "sangue",
+      "salute"
+    ],
     "shared": false,
     "file": "esami_sangue_giugno.pdf"
   },
@@ -67,7 +87,11 @@
     "category": "personal",
     "dateModified": "2025-06-12",
     "dateCreated": "2025-06-12",
-    "tags": ["identità", "documenti", "backup"],
+    "tags": [
+      "identità",
+      "documenti",
+      "backup"
+    ],
     "shared": false,
     "file": "foto_documenti.jpg"
   },
@@ -79,7 +103,11 @@
     "category": "contracts",
     "dateModified": "2025-05-20",
     "dateCreated": "2025-05-20",
-    "tags": ["lavoro", "contratto", "vita-app"],
+    "tags": [
+      "lavoro",
+      "contratto",
+      "vita-app"
+    ],
     "shared": false,
     "file": "contratto_lavoro.pdf"
   },
@@ -91,7 +119,11 @@
     "category": "financial",
     "dateModified": "2025-04-01",
     "dateCreated": "2025-04-01",
-    "tags": ["fatture", "utenze", "q1"],
+    "tags": [
+      "fatture",
+      "utenze",
+      "q1"
+    ],
     "shared": false,
     "file": "fatture_utenze_q1.xlsx"
   },
@@ -103,7 +135,11 @@
     "category": "personal",
     "dateModified": "2025-06-22",
     "dateCreated": "2025-06-01",
-    "tags": ["note", "progetto", "casa"],
+    "tags": [
+      "note",
+      "progetto",
+      "casa"
+    ],
     "shared": false,
     "file": "note_progetto_casa.txt"
   },
@@ -115,8 +151,23 @@
     "category": "medical",
     "dateModified": "2025-06-08",
     "dateCreated": "2025-06-08",
-    "tags": ["ricevute", "mediche", "rimborsi"],
+    "tags": [
+      "ricevute",
+      "mediche",
+      "rimborsi"
+    ],
     "shared": false,
     "file": "ricevute_mediche_2025.pdf"
+  },
+  {
+    "name": "busu",
+    "type": "pdf",
+    "category": "other",
+    "size": 535396,
+    "dateCreated": "2025-07-04T16:04:36.510Z",
+    "dateModified": "2025-07-04T16:04:36.510Z",
+    "tags": [],
+    "shared": false,
+    "id": "1751645076523"
   }
 ]

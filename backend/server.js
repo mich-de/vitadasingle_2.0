@@ -173,6 +173,28 @@ app.delete('/api/documenti/:id', (req, res) => {
   }
 });
 
+// CONTATTI API
+app.get('/api/contatti', (req, res) => {
+  const contatti = readJSONFile(FILES.contatti);
+  res.json(contatti);
+});
+
+app.delete('/api/contatti/:id', (req, res) => {
+  let contatti = readJSONFile(FILES.contatti);
+  const index = contatti.findIndex(c => c.id === req.params.id);
+  if (index === -1) {
+    return res.status(404).json({ message: 'Contatto non trovato' });
+  }
+  const deleted = contatti[index];
+  contatti = contatti.filter(item => item.id !== req.params.id);
+  if (writeJSONFile(FILES.contatti, contatti)) {
+    res.json(deleted);
+  } else {
+    res.status(500).json({ message: 'Errore eliminazione contatto' });
+  }
+});
+
+
 // VEICOLI API
 app.get('/api/veicoli', (req, res) => {
   const veicoli = readJSONFile(FILES.veicoli);
@@ -296,48 +318,6 @@ app.delete('/api/eventi/:id', (req, res) => {
     res.json(deleted);
   } else {
     res.status(500).json({ error: 'Errore eliminazione evento' });
-  }
-});
-
-// CONTATTI API
-app.get('/api/contatti', (req, res) => {
-  const contatti = readJSONFile(FILES.contatti);
-  res.json(contatti);
-});
-
-app.post('/api/contatti', (req, res) => {
-  const contatti = readJSONFile(FILES.contatti);
-  const newItem = { ...req.body, id: Date.now().toString() };
-  contatti.push(newItem);
-  if (writeJSONFile(FILES.contatti, contatti)) {
-    res.status(201).json(newItem);
-  } else {
-    res.status(500).json({ error: 'Errore salvataggio contatto' });
-  }
-});
-
-app.put('/api/contatti/:id', (req, res) => {
-  const contatti = readJSONFile(FILES.contatti);
-  const idx = contatti.findIndex(item => item.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Contatto non trovato' });
-  contatti[idx] = { ...contatti[idx], ...req.body };
-  if (writeJSONFile(FILES.contatti, contatti)) {
-    res.json(contatti[idx]);
-  } else {
-    res.status(500).json({ error: 'Errore aggiornamento contatto' });
-  }
-});
-
-app.delete('/api/contatti/:id', (req, res) => {
-  let contatti = readJSONFile(FILES.contatti);
-  const idx = contatti.findIndex(item => item.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Contatto non trovato' });
-  const deleted = contatti[idx];
-  contatti = contatti.filter(item => item.id !== req.params.id);
-  if (writeJSONFile(FILES.contatti, contatti)) {
-    res.json(deleted);
-  } else {
-    res.status(500).json({ error: 'Errore eliminazione contatto' });
   }
 });
 
@@ -480,13 +460,18 @@ app.get('/api/dashboard', (req, res) => {
     // Calcola valore totale proprietà
     const valoreTotaleProprietà = proprieta.reduce((sum, p) => sum + (p.currentValue || 0), 0);
     
+    // Calcola valore totale veicoli
+    const veicoli = readJSONFile(FILES.veicoli);
+    const valoreTotaleVeicoli = veicoli.reduce((sum, v) => sum + (v.currentValue || 0), 0);
+    
     res.json({
-      scadenzeUrgenti: scadenzeUrgenti.length,
-      eventiProssimi: eventiProssimi.length,
-      speseMeseCorrente: totaleSpeseMese,
-      numeroProprietà: proprieta.length,
-      valoreTotaleProprietà,
-      ultimaAttività: new Date().toISOString()
+      urgentDeadlinesCount: scadenzeUrgenti.length,
+      currentMonthExpenses: totaleSpeseMese,
+      propertyCount: proprieta.length,
+      totalPropertyValue: valoreTotaleProprietà,
+      vehicleCount: veicoli.length,
+      totalVehicleValue: valoreTotaleVeicoli,
+      lastActivity: new Date().toISOString()
     });
   } catch (error) {
     console.error('Errore API dashboard:', error);

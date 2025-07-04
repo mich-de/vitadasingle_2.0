@@ -5,14 +5,16 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   error?: string;
   icon?: React.ComponentType<{ className?: string; size?: number }>;
   helperText?: string;
+  multiline?: boolean;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(({
+export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(({
   label,
   error,
   icon: Icon,
   helperText,
   className = '',
+  multiline = false,
   ...props
 }, ref) => {
   const inputClasses = `
@@ -38,25 +40,29 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
           {props.required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
-      
       <div className="relative">
         {Icon && (
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Icon className="h-5 w-5 text-text-secondary-light dark:text-text-secondary-dark" />
           </div>
         )}
-        
-        <input
-          ref={ref}
-          className={inputClasses}
-          {...props}
-        />
+        {multiline ? (
+          <textarea
+            ref={ref as React.Ref<HTMLTextAreaElement>}
+            className={inputClasses}
+            {...props}
+          />
+        ) : (
+          <input
+            ref={ref as React.Ref<HTMLInputElement>}
+            className={inputClasses}
+            {...props}
+          />
+        )}
       </div>
-      
       {error && (
         <p className="text-sm text-red-500">{error}</p>
       )}
-      
       {helperText && !error && (
         <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">{helperText}</p>
       )}

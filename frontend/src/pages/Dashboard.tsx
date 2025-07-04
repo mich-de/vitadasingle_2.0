@@ -1,54 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import DashboardCard from '../components/dashboard/DashboardCard';
+import { DashboardCard } from '../components/dashboard/DashboardCard';
+import { HeroSection } from '../components/dashboard/HeroSection';
 import { AlertTriangle, CheckCircle, DollarSign, Users, Clock, Home, FileText, BarChart3 } from 'lucide-react';
 import { apiService } from '../services/apiService';
-import type { Deadline, Expense, Event } from '@/types';
-
-// Interfaces for dashboard data
-interface DashboardData {
-  scadenzeUrgenti: number;
-  eventiProssimi: number;
-  speseMeseCorrente: number;
-  numeroProprietà: number;
-  valoreTotaleProprietà: number;
-  ultimaAttività: string;
-}
-
-interface DeadlineItem {
-  id: string;
-  title: string;
-  dueDate: string;
-  category: string;
-  description: string;
-  completed: boolean;
-  priority?: string;
-}
-
-interface ExpenseItem {
-  id: string;
-  title: string;
-  amount: number;
-  date: string;
-  category: string;
-  description?: string;
-}
-
-interface EventItem {
-  id: string;
-  title: string;
-  date: string;
-  time: string;
-  category: string;
-  description?: string;
-}
+import type { DashboardStats, Deadline, Expense, Event } from '../types';
 
 const Dashboard = () => {
   const { t } = useLanguage();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [upcomingDeadlines, setUpcomingDeadlines] = useState<DeadlineItem[]>([]);
-  const [recentExpenses, setRecentExpenses] = useState<ExpenseItem[]>([]);
-  const [upcomingEvents, setUpcomingEvents] = useState<EventItem[]>([]);
+  const [dashboardData, setDashboardData] = useState<DashboardStats | null>(null);
+  const [upcomingDeadlines, setUpcomingDeadlines] = useState<Deadline[]>([]);
+  const [recentExpenses, setRecentExpenses] = useState<Expense[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,48 +24,17 @@ const Dashboard = () => {
       setLoading(true);
       setError(null);
       
-      // Carica dati dashboard dalla API riassuntiva
-      const dashStats = await apiService.getDashboard();
-      setDashboardData(dashStats);
-      
-      // Carica scadenze urgenti (prossimi 30 giorni)
-      const scadenze: Deadline[] = await apiService.getScadenze();
-      const today = new Date();
-      const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(today.getDate() + 30);
-      
-      const urgentDeadlines = scadenze.filter((s: DeadlineItem) => {
-        const scadenza = new Date(s.dueDate);
-        return !s.completed && scadenza >= today && scadenza <= thirtyDaysFromNow;
-      }).slice(0, 3); // Primi 3
-      
-      setUpcomingDeadlines(urgentDeadlines);
-      
-      // Carica spese recenti (ultimo mese)
-      const spese = await apiService.getSpese();
-      const lastMonth = new Date();
-      lastMonth.setMonth(today.getMonth() - 1);
-      
-      const recentExpensesList = spese.filter((s: ExpenseItem) => {
-        const spesaData = new Date(s.date);
-        return spesaData >= lastMonth;
-      }).sort((a: ExpenseItem, b: ExpenseItem) => 
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-      ).slice(0, 3); // Primi 3
-      
-      setRecentExpenses(recentExpensesList);
-      
-      // Carica eventi prossimi (prossimi 7 giorni)
-      const eventi = await apiService.getEventi();
-      const sevenDaysFromNow = new Date();
-      sevenDaysFromNow.setDate(today.getDate() + 7);
-      
-      const nextEvents = eventi.filter((e: EventItem) => {
-        const eventoData = new Date(e.date);
-        return eventoData >= today && eventoData <= sevenDaysFromNow;
-      }).slice(0, 3); // Primi 3
-      
-      setUpcomingEvents(nextEvents);
+      const [summaryData, deadlinesData, expensesData, eventsData] = await Promise.all([
+        apiService.getDashboardSummary(),
+        apiService.getScadenze(), 
+        apiService.getSpese(),
+        apiService.getEventi(),
+      ]);
+
+      setDashboardData(summaryData);
+      setUpcomingDeadlines(deadlinesData.filter(d => !d.completed).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()).slice(0, 5));
+      setRecentExpenses(expensesData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5));
+      setUpcomingEvents(eventsData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0, 5));
       
     } catch (error) {
       console.error('Errore caricamento dashboard:', error);
@@ -168,50 +100,38 @@ const Dashboard = () => {
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Header con indicazione fonte dati */}
-      <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-        <p className="text-sm text-blue-700 dark:text-blue-300">
-          📊 Dashboard alimentata dai dati JSON in <code>/data/</code>
-        </p>
-        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-          Ultimo aggiornamento: {dashboardData?.ultimaAttività ? new Date(dashboardData.ultimaAttività).toLocaleString('it-IT') : 'N/A'}
-        </p>
-      </div>
+      <HeroSection lastUpdated={dashboardData?.lastActivity} />
 
       {/* Stats Cards Section */}
       <section>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <DashboardCard 
             title="Scadenze urgenti"
-            value={dashboardData?.scadenzeUrgenti?.toString() || '0'}
+            value={dashboardData?.urgentDeadlinesCount?.toString() || '0'}
             icon={AlertTriangle}
             iconColor="text-red-500 dark:text-red-400"
             description={`Prossimi 30 giorni`}
-            trend={`${upcomingDeadlines.length} da completare`}
           />
           <DashboardCard 
             title="Spese mese corrente" 
-            value={formatCurrency(dashboardData?.speseMeseCorrente || 0)}
+            value={formatCurrency(dashboardData?.currentMonthExpenses || 0)}
             icon={DollarSign}
             iconColor="text-green-500 dark:text-green-400"
             description="Totale del mese"
-            trend={`${recentExpenses.length} transazioni recenti`}
-            trendColor="text-blue-500 dark:text-blue-400"
           />
           <DashboardCard 
             title="Le mie proprietà"
-            value={dashboardData?.numeroProprietà?.toString() || '0'}
+            value={dashboardData?.propertyCount?.toString() || '0'}
             icon={Home}
             iconColor="text-purple-500 dark:text-purple-400"
-            description={`Valore: ${formatCurrency(dashboardData?.valoreTotaleProprietà || 0)}`}
-            trend="Immobili gestiti"
+            description={`Valore: ${formatCurrency(dashboardData?.totalPropertyValue || 0)}`}
           />
           <DashboardCard 
-            title="Eventi prossimi"
-            value={dashboardData?.eventiProssimi?.toString() || '0'}
-            icon={Clock}
-            iconColor="text-blue-500 dark:text-blue-400"
-            description="Prossimi 7 giorni"
-            trend={upcomingEvents.length > 0 ? `Prossimo: ${upcomingEvents[0]?.title}` : 'Nessun evento'}
+            title="I miei veicoli"
+            value={dashboardData?.vehicleCount?.toString() || '0'}
+            icon={FileText}
+            iconColor="text-yellow-500 dark:text-yellow-400"
+            description={`Valore: ${formatCurrency(dashboardData?.totalVehicleValue || 0)}`}
           />
         </div>
       </section>
@@ -354,7 +274,7 @@ const Dashboard = () => {
               <Home className="mx-auto text-purple-500 mb-2" size={24} />
               <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Proprietà</p>
               <p className="font-bold text-text-primary-light dark:text-text-primary-dark">
-                {dashboardData?.numeroProprietà || 0}
+                {dashboardData?.propertyCount || 0}
               </p>
             </div>
             <div>
@@ -366,7 +286,7 @@ const Dashboard = () => {
               <BarChart3 className="mx-auto text-orange-500 mb-2" size={24} />
               <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Totale patrimonio</p>
               <p className="font-bold text-text-primary-light dark:text-text-primary-dark">
-                {formatCurrency(dashboardData?.valoreTotaleProprietà || 0)}
+                {formatCurrency(dashboardData?.totalPropertyValue || 0)}
               </p>
             </div>
           </div>

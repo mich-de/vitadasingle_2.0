@@ -1,10 +1,13 @@
 // src/types/features/dashboard.ts
 
 export interface DashboardStats {
-  pendingDeadlines: number;
-  totalExpenses: number;
-  activeProperties: number;
-  upcomingEvents: number;
+  urgentDeadlinesCount?: number;
+  currentMonthExpenses?: number;
+  propertyCount?: number;
+  totalPropertyValue?: number;
+  vehicleCount?: number;
+  totalVehicleValue?: number;
+  lastActivity?: string;
 }
 
 export interface DashboardWidget {

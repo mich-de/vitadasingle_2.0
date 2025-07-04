@@ -11,6 +11,8 @@ export interface Expense {
   receiptUrl?: string;
   createdAt: string;
   updatedAt: string;
+  recurring?: boolean;
+  frequency?: RecurringFrequency;
 }
 
 export type ExpenseCategory = 
@@ -25,6 +27,8 @@ export type ExpenseCategory =
 
 export type PaymentMethod = 'card' | 'cash' | 'transfer' | 'check';
 
+export type RecurringFrequency = 'daily' | 'weekly' | 'monthly' | 'bimonthly' | 'quarterly' | 'yearly';
+
 export interface CreateExpenseInput {
   amount: number;
   description?: string;
@@ -32,6 +36,8 @@ export interface CreateExpenseInput {
   paymentMethod: PaymentMethod;
   date: string;
   receiptUrl?: string;
+  recurring?: boolean;
+  frequency?: RecurringFrequency;
 }
 
 export interface UpdateExpenseInput {
@@ -41,6 +47,8 @@ export interface UpdateExpenseInput {
   paymentMethod?: PaymentMethod;
   date?: string;
   receiptUrl?: string;
+  recurring?: boolean;
+  frequency?: RecurringFrequency;
 }
 
 export interface ExpenseFilters {
@@ -52,4 +60,5 @@ export interface ExpenseFilters {
   };
   minAmount?: number;
   maxAmount?: number;
+  recurring?: boolean;
 }

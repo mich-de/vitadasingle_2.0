@@ -7,12 +7,13 @@
     "category": "food",
     "description": "Spesa settimanale al supermercato",
     "paymentMethod": "card",
-    "recurring": false
+    "recurring": false,
+    "frequency": null
   },
   {
     "id": "2",
     "title": "Bolletta elettricità",
-    "amount": 65.20,
+    "amount": 65.2,
     "date": "2025-06-25",
     "category": "utilities",
     "description": "Bolletta energia elettrica bimestrale",
@@ -23,7 +24,7 @@
   {
     "id": "3",
     "title": "Carburante",
-    "amount": 45.00,
+    "amount": 45,
     "date": "2025-06-24",
     "category": "transport",
     "description": "Rifornimento benzina",
@@ -44,7 +45,7 @@
   {
     "id": "5",
     "title": "Ristorante",
-    "amount": 58.50,
+    "amount": 58.5,
     "date": "2025-06-22",
     "category": "entertainment",
     "description": "Cena fuori con amici",

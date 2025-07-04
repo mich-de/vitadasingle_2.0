@@ -3,7 +3,12 @@ import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { ChevronRight } from 'lucide-react';
 
-const HeroSection: React.FC = () => {
+interface HeroSectionProps {
+  lastUpdated?: string;
+}
+
+// Add named export alongside default export
+export const HeroSection: React.FC<HeroSectionProps> = ({ lastUpdated }) => {
   const { darkMode } = useTheme();
   const { t } = useLanguage();
 
@@ -40,9 +45,15 @@ const HeroSection: React.FC = () => {
             {t('dashboard.learnMore')} <ChevronRight size={20} className="ml-2" />
           </button>
         </div>
+        {lastUpdated && (
+          <p className="mt-6 text-xs text-text-secondary-light dark:text-text-secondary-dark">
+            {t('dashboard.lastUpdated')}: {lastUpdated}
+          </p>
+        )}
       </div>
     </section>
   );
 };
 
+// Keep default export for backward compatibility
 export default HeroSection;

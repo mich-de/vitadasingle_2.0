@@ -14,7 +14,8 @@ interface DashboardCardProps {
   };
 }
 
-const DashboardCard: React.FC<DashboardCardProps> = ({
+// Add named export alongside default export
+export const DashboardCard: React.FC<DashboardCardProps> = ({
   title,
   value,
   icon: IconComponent,
@@ -68,4 +69,5 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   );
 };
 
+// Keep default export for backward compatibility
 export default DashboardCard;

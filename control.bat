@@ -1,72 +1,91 @@
 @echo off
 setlocal enabledelayedexpansion
 
-:: Titoli delle finestre per i processi
-set "BACKEND_TITLE=VitaApp Backend"
-set "FRONTEND_TITLE=VitaApp Frontend"
+:: Configurazione
+set "BACKENDTITLE=VitaApp Backend"
+set "FRONTENDTITLE=VitaApp Frontend"
+set "BACKENDDIR=%~dp0backend"
+set "FRONTENDDIR=%~dp0frontend"
+set "DATADIR=%~dp0data"
+set "PROJECTROOT=%~dp0"
 
-:: Directory dei progetti  
-set "BACKEND_DIR=%~dp0backend"
-set "FRONTEND_DIR=%~dp0frontend"
-set "DATA_DIR=%~dp0data"
+:: Colori per output
+color 0A
 
 :menu
 cls
 echo ==========================================
 echo        VitaApp - Pannello di Controllo
+echo               v3.0 Unified
 echo ==========================================
 echo.
 
 :: Controlla lo stato dei servizi
-call :check_status
+call :checkstatus
 echo Stato attuale:
-echo   - Backend:  !BACKEND_STATUS!
-echo   - Frontend: !FRONTEND_STATUS!
+echo   - Backend:  !BACKENDSTATUS!
+echo   - Frontend: !FRONTENDSTATUS!
+echo   - Node Processes: !NODECOUNT!
 echo.
 echo ==========================================
 echo                   MENU
 echo ==========================================
 echo.
-echo [SERVIZI]
-echo     1. [+] Avvia Tutto
-echo     2. [-] Ferma Tutto  
+echo [BASILARI]
+echo     1. [S] Avvia Tutto (Quick Start)
+echo     2. [K] Ferma Tutto (Kill All)
 echo     3. [R] Riavvia Tutto
 echo.
+echo [AVANZATE]
 echo     4. [+] Avvia Solo Backend
 echo     5. [-] Ferma Solo Backend
 echo     6. [+] Avvia Solo Frontend
 echo     7. [-] Ferma Solo Frontend
 echo.
-echo [MANUTENZIONE]
-echo     8. [C] Pulisci Cache
-echo     9. [F] Fix Errori Import
-echo    10. [I] Reinstalla Dipendenze
-echo    11. [X] Pulizia Completa + Reinstall
+echo [INSTALLAZIONE E MANUTENZIONE]
+echo     8. [I] Installazione / Ripristino Completo
+echo     9. [C] Pulisci Cache (Leggera)
+    echo 10. [X] Pulizia Profonda (Rimuove Cache, Log, etc)
 echo.
+
+echo [BUILD E DEPLOY]
+    echo 11. [B] Build per Produzione
+echo.
+
 echo [DIAGNOSTICA]
-echo    12. [T] Test Sistema
-echo    13. [?] Info Progetto
+echo    12. [D] Info Debug e Diagnostica
+echo    13. [P] Processi Node.js Attivi
 echo.
 echo [SISTEMA]
-echo    14. [Q] Esci (ferma tutto)
+echo    14. [Q] Esci (e killa tutto)
 echo.
 
-set /p choice="Scegli un'opzione (1-14): "
+set /p choice="Scegli un'opzione: "
 
-if /I "%choice%"=="1" (call :startall & goto menu)
-if /I "%choice%"=="2" (call :stopall & goto menu)
+if /I "%choice%"=="1" (call :quickstart & goto menu)
+if /I "%choice%"=="S" (call :quickstart & goto menu)
+if /I "%choice%"=="2" (call :killallnode & goto menu)
+if /I "%choice%"=="K" (call :killallnode & goto menu)
 if /I "%choice%"=="3" (call :restartall & goto menu)
+if /I "%choice%"=="R" (call :restartall & goto menu)
 if /I "%choice%"=="4" (call :startbackend & goto menu)
 if /I "%choice%"=="5" (call :stopbackend & goto menu)
 if /I "%choice%"=="6" (call :startfrontend & goto menu)
 if /I "%choice%"=="7" (call :stopfrontend & goto menu)
-if /I "%choice%"=="8" (call :clean_cache & goto menu)
-if /I "%choice%"=="9" (call :fix_imports & goto menu)
-if /I "%choice%"=="10" (call :reinstall_deps & goto menu)
-if /I "%choice%"=="11" (call :deep_clean & goto menu)
-if /I "%choice%"=="12" (call :test_system & goto menu)
-if /I "%choice%"=="13" (call :project_info & goto menu)
-if /I "%choice%"=="14" (goto exit_script)
+if /I "%choice%"=="8" (call :firstinstall & goto menu)
+if /I "%choice%"=="I" (call :firstinstall & goto menu)
+if /I "%choice%"=="9" (call :cleancachelight & goto menu)
+if /I "%choice%"=="C" (call :cleancachelight & goto menu)
+if /I "%choice%"=="10" (call :deepclean & goto menu)
+if /I "%choice%"=="X" (call :deepclean & goto menu)
+if /I "%choice%"=="11" (call :buildproduction & goto menu)
+if /I "%choice%"=="B" (call :buildproduction & goto menu)
+if /I "%choice%"=="12" (call :projectinfo & goto menu)
+if /I "%choice%"=="D" (call :projectinfo & goto menu)
+if /I "%choice%"=="13" (call :shownodeprocesses & goto menu)
+if /I "%choice%"=="P" (call :shownodeprocesses & goto menu)
+if /I "%choice%"=="14" (goto exitscript)
+if /I "%choice%"=="Q" (goto exitscript)
 
 echo.
 echo [ERRORE] Scelta non valida. Riprova.
@@ -74,204 +93,171 @@ timeout /t 2 /nobreak >nul
 goto menu
 
 REM ==================================================================
-REM                      FUNZIONI PRINCIPALI
+REM                    NUOVA FUNZIONE: PRIMA INSTALLAZIONE
 REM ==================================================================
 
-:startall
+:firstinstall
 echo.
-echo === AVVIO COMPLETO ===
-call :startbackend
-call :startfrontend
+echo === PRIMA INSTALLAZIONE / SETUP COMPLETO ===
 echo.
-echo [OK] Avvio completato!
-timeout /t 3 /nobreak >nul
-goto :eof
 
-:stopall  
-echo.
-echo === ARRESTO COMPLETO ===
-call :stopbackend
-call :stopfrontend
-echo.
-echo [OK] Arresto completato!
-timeout /t 2 /nobreak >nul
-goto :eof
-
-:restartall
-echo.
-echo === RIAVVIO COMPLETO ===
-call :stopall
-echo.
-echo [INFO] Attesa 3 secondi prima del riavvio...
-timeout /t 3 /nobreak >nul
-call :startall
-goto :eof
-
-REM ==================================================================
-REM                    FUNZIONI DI CONTROLLO SERVIZI
-REM ==================================================================
-
-:check_status
-    set "BACKEND_STATUS=[X] Fermo"
-    set "FRONTEND_STATUS=[X] Fermo"
-    tasklist /FI "WINDOWTITLE eq %BACKEND_TITLE%" 2>nul | find "node.exe" >nul
-    if not errorlevel 1 set "BACKEND_STATUS=[OK] In Esecuzione"
-    tasklist /FI "WINDOWTITLE eq %FRONTEND_TITLE%" 2>nul | find "node.exe" >nul  
-    if not errorlevel 1 set "FRONTEND_STATUS=[OK] In Esecuzione"
-    goto :eof
-
-:startbackend
-    echo.
-    echo --- Avvio Backend ---
-    tasklist /FI "WINDOWTITLE eq %BACKEND_TITLE%" 2>nul | find "node.exe" >nul
-    if not errorlevel 1 (
-        echo [WARN] Il Backend e' gia' in esecuzione.
-    ) else (
-        if not exist "%BACKEND_DIR%\server.js" (
-            echo [ERROR] File server.js non trovato in %BACKEND_DIR%
-        ) else (
-            echo Directory: %BACKEND_DIR%
-            echo [INFO] Avvio del server Backend...
-            start "%BACKEND_TITLE%" /D "%BACKEND_DIR%" cmd /c "node server.js"
-            echo [OK] Backend avviato in una nuova finestra.
-            echo API disponibili su: http://localhost:4000
-        )
-    )
-    timeout /t 2 /nobreak >nul
-    goto :eof
-
-:stopbackend
-    echo.
-    echo --- Arresto Backend ---
-    tasklist /FI "WINDOWTITLE eq %BACKEND_TITLE%" 2>nul | find "node.exe" >nul
-    if not errorlevel 1 (
-        echo [INFO] Trovato processo Backend, arresto in corso...
-        taskkill /F /FI "WINDOWTITLE eq %BACKEND_TITLE%" /T >nul 2>&1
-        echo [OK] Backend arrestato.
-    ) else (
-        echo [WARN] Il Backend non risulta in esecuzione.
-    )
-    timeout /t 1 /nobreak >nul
-    goto :eof
-
-:startfrontend
-    echo.
-    echo --- Avvio Frontend ---
-    tasklist /FI "WINDOWTITLE eq %FRONTEND_TITLE%" 2>nul | find "node.exe" >nul
-    if not errorlevel 1 (
-        echo [WARN] Il Frontend e' gia' in esecuzione.
-    ) else (
-        if not exist "%FRONTEND_DIR%\package.json" (
-            echo [ERROR] File package.json non trovato in %FRONTEND_DIR%
-        ) else (
-            echo Directory: %FRONTEND_DIR%
-            echo [INFO] Avvio del server di sviluppo...
-            start "%FRONTEND_TITLE%" /D "%FRONTEND_DIR%" cmd /c "npm run dev"
-            echo [OK] Frontend avviato in una nuova finestra.
-            echo App disponibile su: http://localhost:5173
-        )
-    )
-    timeout /t 2 /nobreak >nul
-    goto :eof
-
-:stopfrontend
-    echo.
-    echo --- Arresto Frontend ---
-    tasklist /FI "WINDOWTITLE eq %FRONTEND_TITLE%" 2>nul | find "node.exe" >nul
-    if not errorlevel 1 (
-        echo [INFO] Trovato processo Frontend, arresto in corso...
-        taskkill /F /FI "WINDOWTITLE eq %FRONTEND_TITLE%" /T >nul 2>&1
-        echo [OK] Frontend arrestato.
-    ) else (
-        echo [WARN] Il Frontend non risulta in esecuzione.
-    )
-    timeout /t 1 /nobreak >nul
-    goto :eof
-
-REM ==================================================================
-REM                    FUNZIONI DI MANUTENZIONE
-REM ==================================================================
-
-:clean_cache
-echo.
-echo === PULIZIA CACHE ===
-call :stopall
-echo.
-cd /d "%FRONTEND_DIR%"
-echo [INFO] Pulizia cache Vite...
-if exist "node_modules\.vite" rmdir /s /q "node_modules\.vite" 2>nul
-if exist ".vite" rmdir /s /q ".vite" 2>nul
-if exist "dist" rmdir /s /q "dist" 2>nul
-if exist ".parcel-cache" rmdir /s /q ".parcel-cache" 2>nul
-if exist "node_modules\.tmp" rmdir /s /q "node_modules\.tmp" 2>nul
-echo [INFO] Pulizia file temporanei...
-del /q /s *.log 2>nul
-del /q /s *.tmp 2>nul
-echo [OK] Cache pulita!
-echo.
-echo Premi un tasto per tornare al menu...
-pause >nul
-goto :eof
-
-:fix_imports
-echo.
-echo === FIX ERRORI IMPORT ===
-call :stopall
-echo.
-cd /d "%FRONTEND_DIR%"
-echo [INFO] Pulizia cache completa...
-call :clean_cache_silent
-echo.
-echo [INFO] Verifica dipendenze...
-npm install --silent
-echo.
-echo [INFO] Verifica configurazione TypeScript...
-npx tsc --noEmit --project tsconfig.json
+:: Verifica Node.js
+echo [1/7] Verifica Node.js...
+node --version >nul 2>&1
 if errorlevel 1 (
-    echo [WARN] Trovati errori TypeScript, ma continuo...
+    echo [ERRORE] Node.js non installato!
+    echo.
+    echo Scarica Node.js da: https://nodejs.org/
+    echo.
+    pause
+    goto :eof
+)
+node --version
+npm --version
+echo [OK] Node.js presente
+echo.
+
+:: Kill tutti i processi
+echo [2/7] Pulizia processi esistenti...
+call :killallnodesilent
+echo [OK] Processi puliti
+echo.
+
+:: Installa dipendenze backend
+echo [3/7] Installazione dipendenze Backend...
+cd /d "%BACKENDDIR%"
+npm install --force
+if errorlevel 1 (
+    echo [ERRORE] Installazione backend fallita!
+    pause
+    goto :eof
+)
+echo [OK] Backend pronto
+echo.
+
+:: Installa dipendenze frontend
+echo [4/7] Installazione dipendenze Frontend...
+cd /d "%FRONTENDDIR%"
+npm install --force
+if errorlevel 1 (
+    echo [ERRORE] Installazione frontend fallita!
+    pause
+    goto :eof
+)
+echo [OK] Frontend pronto
+echo.
+
+:: Pulisci cache
+echo [5/7] Pulizia cache completa...
+call :deepcleancachesilent
+echo [OK] Cache pulita
+echo.
+
+:: Crea directory data se non esiste
+echo [6/7] Verifica struttura progetto...
+if not exist "%DATADIR%" mkdir "%DATADIR%"
+echo [OK] Struttura verificata
+echo.
+
+:: Test finale
+echo [7/7] Test configurazione...
+cd /d "%FRONTENDDIR%"
+npx tsc --noEmit --project tsconfig.json >nul 2>&1
+if errorlevel 1 (
+    echo [WARN] Problemi TypeScript rilevati
 ) else (
-    echo [OK] TypeScript OK!
+    echo [OK] TypeScript configurato correttamente
 )
 echo.
-echo [OK] Fix completato!
+
+echo ==========================================
+echo    INSTALLAZIONE COMPLETATA!
+echo ==========================================
 echo.
-echo Premi un tasto per tornare al menu...
-pause >nul
+echo Il progetto e' pronto all'uso.
+echo Usa l'opzione 1 per avviare tutto.
+echo.
+pause
 goto :eof
 
-:reinstall_deps
-echo.
-echo === REINSTALLAZIONE DIPENDENZE ===
-call :stopall
-echo.
-cd /d "%FRONTEND_DIR%"
-echo [INFO] Rimozione node_modules...
-if exist "node_modules" rmdir /s /q "node_modules" 2>nul
-echo [INFO] Rimozione lock files...
-if exist "package-lock.json" del "package-lock.json" 2>nul
-if exist "yarn.lock" del "yarn.lock" 2>nul
-echo.
-echo [INFO] Pulizia cache npm...
-npm cache clean --force
-echo.
-echo [INFO] Reinstallazione dipendenze...
-npm install
-echo.
-echo [OK] Dipendenze reinstallate!
-echo.
-echo Premi un tasto per tornare al menu...
-pause >nul
-goto :eof
+REM ==================================================================
+REM                    NUOVA FUNZIONE: PULIZIA PROFONDA
+REM ==================================================================
 
-:deep_clean
+:deepclean
+    echo.
+    echo === PULIZIA PROFONDA DEL PROGETTO ===
+    echo.
+    echo [1/5] Rimozione file di configurazione obsoleti...
+    del /f /q "%FRONTENDDIR%\postcss.config.alternative.js" >nul 2>&1
+    del /f /q "%FRONTENDDIR%\postcss.config.js.backup" >nul 2>&1
+    del /f /q "%FRONTENDDIR%\postcss.config.mjs.backup" >nul 2>&1
+    del /f /q "%FRONTENDDIR%\postcss.config.alternative.js.bak" >nul 2>&1
+    echo [OK]
+    echo.
+
+    echo [2/5] Rimozione cache di Vite e nodemodules...
+    call :deepcleancachesilent
+    echo [OK]
+    echo.
+
+    echo [3/5] Rimozione file di log...
+    del /f /q "%FRONTENDDIR%\npm-debug.log*" >nul 2>&1
+    del /f /q "%FRONTENDDIR%\yarn-debug.log*" >nul 2>&1
+    del /f /q "%FRONTENDDIR%\yarn-error.log*" >nul 2>&1
+    del /f /q "%BACKENDDIR%\npm-debug.log*" >nul 2>&1
+    del /f /q "%BACKENDDIR%\yarn-debug.log*" >nul 2>&1
+    del /f /q "%BACKENDDIR%\yarn-error.log*" >nul 2>&1
+    echo [OK]
+    echo.
+
+    echo [4/5] Verifica file .gitignore...
+    if not exist "%FRONTENDDIR%\.gitignore" echo # Dependencies > "%FRONTENDDIR%\.gitignore"
+    if not exist "%BACKENDDIR%\.gitignore" echo # Dependencies > "%BACKENDDIR%\.gitignore"
+    echo [OK]
+    echo.
+    
+    echo [5/5] Controllo file essenziali...
+    if exist "%FRONTENDDIR%\package.json" (echo   - [OK] frontend/package.json) else (echo   - [!!] MANCANTE: frontend/package.json)
+    if exist "%BACKENDDIR%\package.json" (echo   - [OK] backend/package.json) else (echo   - [!!] MANCANTE: backend/package.json)
+    if exist "%FRONTENDDIR%\vite.config.ts" (echo   - [OK] frontend/vite.config.ts) else (echo   - [!!] MANCANTE: frontend/vite.config.ts)
+    if exist "%BACKENDDIR%\server.js" (echo   - [OK] backend/server.js) else (echo   - [!!] MANCANTE: backend/server.js)
+    echo.
+
+    echo ==========================================
+    echo      PULIZIA PROFONDA COMPLETATA
+    echo ==========================================
+    echo.
+    pause
+    goto :eof
+
+REM ==================================================================
+REM                 FUNZIONI MIGLIORATE PER KILL PROCESSI
+REM ==================================================================
+
+:checkstatus
+    set "BACKENDSTATUS=[X] Fermo"
+    set "FRONTENDSTATUS=[X] Fermo"
+    set NODECOUNT=0
+    
+    :: Conta processi node
+    for /f %%i in ('tasklist ^| find /c "node.exe"') do set NODECOUNT=%%i
+    
+    :: Verifica backend
+    netstat -ano | findstr :4000 >nul 2>&1
+    if not errorlevel 1 set "BACKENDSTATUS=[OK] In Esecuzione"
+    
+    :: Verifica frontend
+    netstat -ano | findstr :5173 >nul 2>&1
+    if not errorlevel 1 set "FRONTENDSTATUS=[OK] In Esecuzione"
+    
+    goto :eof
+
+:killallnode
 echo.
-echo === PULIZIA COMPLETA + REINSTALL ===
+echo === KILL ALL NODE PROCESSES ===
 echo.
-echo [ATTENZIONE] Questa operazione:
-echo     - Fermera' tutti i servizi
-echo     - Cancellera' tutte le cache
-echo     - Reinstallera' tutte le dipendenze
-echo     - Puo' richiedere diversi minuti
+echo [WARN] Verra' terminato OGNI processo Node.js!
 echo.
 set /p confirm="Sei sicuro? (S/N): "
 if /i not "%confirm%"=="S" (
@@ -280,155 +266,224 @@ if /i not "%confirm%"=="S" (
     goto :eof
 )
 echo.
-echo [INFO] Inizio pulizia completa...
-call :stopall
-call :clean_cache_silent
-call :reinstall_deps_silent
-echo.
-echo [OK] Pulizia completa terminata!
-echo.
-echo Premi un tasto per tornare al menu...
-pause >nul
-goto :eof
-
-:clean_cache_silent
-cd /d "%FRONTEND_DIR%"
-if exist "node_modules\.vite" rmdir /s /q "node_modules\.vite" 2>nul
-if exist ".vite" rmdir /s /q ".vite" 2>nul
-if exist "dist" rmdir /s /q "dist" 2>nul
-if exist ".parcel-cache" rmdir /s /q ".parcel-cache" 2>nul
-if exist "node_modules\.tmp" rmdir /s /q "node_modules\.tmp" 2>nul
-del /q /s *.log 2>nul
-del /q /s *.tmp 2>nul
-goto :eof
-
-:reinstall_deps_silent
-cd /d "%FRONTEND_DIR%"
-if exist "node_modules" rmdir /s /q "node_modules" 2>nul
-if exist "package-lock.json" del "package-lock.json" 2>nul
-if exist "yarn.lock" del "yarn.lock" 2>nul
-npm cache clean --force >nul 2>&1
-npm install --silent
-goto :eof
-
-REM ==================================================================
-REM                    FUNZIONI DI DIAGNOSTICA
-REM ==================================================================
-
-:test_system
-echo.
-echo === TEST SISTEMA ===
-echo.
-
-echo Test 1: Verifica struttura progetto...
-if not exist "%DATA_DIR%" (
-    echo [ERROR] Cartella data non trovata!
-) else (
-    echo [OK] Cartella data trovata
-    for %%f in ("%DATA_DIR%\*.json") do echo    - %%~nxf
-)
-echo.
-
-echo Test 2: Verifica backend...
-if not exist "%BACKEND_DIR%\server.js" (
-    echo [ERROR] File server.js non trovato!
-) else (
-    echo [OK] Backend configurato correttamente
-)
-echo.
-
-echo Test 3: Verifica frontend...
-if not exist "%FRONTEND_DIR%\src\pages\Deadlines.tsx" (
-    echo [ERROR] Pagine frontend mancanti!
-) else (
-    echo [OK] Frontend configurato correttamente
-)
-echo.
-echo Test 4: Verifica dipendenze...
-cd /d "%FRONTEND_DIR%"
-if not exist "node_modules" (
-    echo [WARN] Node_modules non installati
-) else (
-    echo [OK] Dipendenze installate
-)
-echo.
-
-echo Test 5: Test connessione API...
-curl -s http://localhost:4000/api/scadenze >nul 2>&1
+echo [INFO] Terminazione di tutti i processi Node.js...
+taskkill /F /IM node.exe /T 2>nul
 if errorlevel 1 (
-    echo [WARN] Server non raggiungibile (normale se spento)
+    echo [INFO] Nessun processo Node.js trovato
 ) else (
-    echo [OK] API endpoints raggiungibili
+    echo [OK] Tutti i processi Node.js terminati
 )
 echo.
-
-echo Test 6: Verifica configurazione TypeScript...
-cd /d "%FRONTEND_DIR%"
-npx tsc --noEmit --project tsconfig.json >nul 2>&1
-if errorlevel 1 (
-    echo [WARN] Problemi di configurazione TypeScript
-) else (
-    echo [OK] Configurazione TypeScript OK
-)
-echo.
-
-echo [OK] Test completati!
-echo.
-echo Premi un tasto per tornare al menu...
-pause >nul
+pause
 goto :eof
 
-:project_info
-echo.
-echo === INFORMAZIONI PROGETTO ===
-echo.
-echo Directory Progetto: %~dp0
-echo Directory Backend:  %BACKEND_DIR%
-echo Directory Frontend: %FRONTEND_DIR%
-echo Directory Data:     %DATA_DIR%
-echo.
-echo URL di sviluppo:
-echo    - Frontend: http://localhost:5173
-echo    - Backend:  http://localhost:4000
-echo    - API:      http://localhost:4000/api
-echo.
-echo Struttura Progetto:
-echo    +-- backend/     (Server Express.js)
-echo    +-- frontend/    (App React + TypeScript + Vite)
-echo    +-- data/        (File JSON per dati)
-echo    +-- scripts/     (Script di utilita')
-echo    +-- control.bat  (Questo pannello di controllo)
-echo.
-echo Tecnologie utilizzate:
-echo    - Frontend: React 18 + TypeScript + Vite + Tailwind CSS
-echo    - Backend:  Node.js + Express.js
-echo    - Storage:  File JSON (data/)
-echo    - Types:    Struttura modulare organizzata
-echo.
-
-cd /d "%FRONTEND_DIR%"
-if exist "package.json" (
-    echo Versione App:
-    findstr "\"version\"" package.json
-)
-echo.
-
-echo Premi un tasto per tornare al menu...
-pause >nul
+:killallnodesilent
+taskkill /F /IM node.exe /T >nul 2>&1
 goto :eof
 
 REM ==================================================================
-REM                        FUNZIONI DI USCITA
+REM              FUNZIONI DI AVVIO/STOP MIGLIORATE
 REM ==================================================================
 
-:exit_script
-echo.
-echo === CHIUSURA PANNELLO DI CONTROLLO ===
-echo.
-echo [INFO] Arresto di tutti i servizi...
-call :stopall
-echo.
-echo Arrivederci!
-echo.
-timeout /t 2 /nobreak >nul
-exit /b 0
+:startbackend
+    echo.
+    echo --- Avvio Backend ---
+    
+    :: Verifica porta 4000
+    netstat -ano | findstr :4000 >nul 2>&1
+    if not errorlevel 1 (
+        echo [WARN] Porta 4000 gia' in uso!
+        echo [INFO] Tentativo di liberare la porta...
+        for /f "tokens=5" %%a in ('netstat -ano ^| findstr :4000') do (
+            taskkill /F /PID %%a >nul 2>&1
+        )
+        timeout /t 2 /nobreak >nul
+    )
+    
+    :: Verifica dipendenze
+    if not exist "%BACKENDDIR%\node_modules" (
+        echo [WARN] Dipendenze backend non installate!
+        echo [INFO] Installazione in corso...
+        cd /d "%BACKENDDIR%"
+        npm install
+    )
+    
+    :: Avvia backend
+    if not exist "%BACKENDDIR%\server.js" (
+        echo [ERROR] File server.js non trovato!
+    ) else (
+        echo [INFO] Avvio del server Backend...
+        start "%BACKENDTITLE%" /D "%BACKENDDIR%" cmd /k "node server.js"
+        timeout /t 3 /nobreak >nul
+        
+        :: Verifica avvio
+        netstat -ano | findstr :4000 >nul 2>&1
+        if errorlevel 1 (
+            echo [ERROR] Backend non avviato correttamente!
+        ) else (
+            echo [OK] Backend avviato su http://localhost:4000
+        )
+    )
+    goto :eof
+
+:stopbackend
+    echo.
+    echo --- Arresto Backend ---
+    
+    :: Trova e killa processo sulla porta 4000
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :4000') do (
+        echo [INFO] Terminazione processo PID %%a...
+        taskkill /F /PID %%a >nul 2>&1
+    )
+    
+    :: Chiudi finestra con titolo
+    taskkill /F /FI "WINDOWTITLE eq %BACKENDTITLE%" /T >nul 2>&1
+    
+    echo [OK] Backend arrestato
+    goto :eof
+
+:startfrontend
+    echo.
+    echo --- Avvio Frontend ---
+    
+    :: Verifica porta 5173
+    netstat -ano | findstr :5173 >nul 2>&1
+    if not errorlevel 1 (
+        echo [WARN] Porta 5173 gia' in uso!
+        echo [INFO] Tentativo di liberare la porta...
+        for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5173') do (
+            taskkill /F /PID %%a >nul 2>&1
+        )
+        timeout /t 2 /nobreak >nul
+    )
+    
+    :: Verifica dipendenze
+    if not exist "%FRONTENDDIR%\node_modules" (
+        echo [WARN] Dipendenze frontend non installate!
+        echo [INFO] Installazione in corso...
+        cd /d "%FRONTENDDIR%"
+        npm install
+    )
+    
+    :: Pulisci cache Vite
+    cd /d "%FRONTENDDIR%"
+    if exist "node_modules\.vite" rmdir /s /q "node_modules\.vite" 2>nul
+    
+    :: Avvia frontend
+    echo [INFO] Avvio del server di sviluppo...
+    start "%FRONTENDTITLE%" /D "%FRONTENDDIR%" cmd /k "npm run dev"
+    timeout /t 5 /nobreak >nul
+    
+    :: Verifica avvio
+    netstat -ano | findstr :5173 >nul 2>&1
+    if errorlevel 1 (
+        echo [ERROR] Frontend non avviato correttamente!
+    ) else (
+        echo [OK] Frontend avviato su http://localhost:5173
+    )
+    goto :eof
+
+:stopfrontend
+    echo.
+    echo --- Arresto Frontend ---
+    
+    :: Trova e killa processo sulla porta 5173
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5173') do (
+        echo [INFO] Terminazione processo PID %%a...
+        taskkill /F /PID %%a >nul 2>&1
+    )
+    
+    :: Chiudi finestra con titolo
+    taskkill /F /FI "WINDOWTITLE eq %FRONTENDTITLE%" /T >nul 2>&1
+    
+    echo [OK] Frontend arrestato
+    goto :eof
+
+:quickstart
+    echo.
+    echo --- Quick Start --- 
+    call :killallnodesilent
+    call :startbackend
+    call :startfrontend
+    echo.
+    echo [INFO] Avvio completato. Controlla le finestre.
+    timeout /t 3 /nobreak >nul
+    goto :eof
+
+:restartall
+    echo.
+    echo --- Riavvio Completo --- 
+    call :killallnode
+    call :startbackend
+    call :startfrontend
+    echo.
+    echo [INFO] Riavvio completato.
+    timeout /t 3 /nobreak >nul
+    goto :eof
+
+:cleancachelight
+    echo.
+    echo --- Pulizia Cache Leggera ---
+    cd /d "%FRONTENDDIR%"
+    if exist "node_modules\.vite" (
+        rmdir /s /q "node_modules\.vite" 2>nul
+        echo [OK] Cache di Vite rimossa.
+    ) else (
+        echo [INFO] Nessuna cache di Vite da pulire.
+    )
+    pause
+    goto :eof
+
+:deepcleancachesilent
+    if exist "%FRONTENDDIR%\node_modules" rmdir /s /q "%FRONTENDDIR%\node_modules" 2>nul
+    if exist "%BACKENDDIR%\node_modules" rmdir /s /q "%BACKENDDIR%\node_modules" 2>nul
+    goto :eof
+
+:buildproduction
+    echo.
+    echo --- Build per Produzione ---
+    cd /d "%FRONTENDDIR%"
+    npm run build
+    if errorlevel 1 (
+        echo [ERRORE] Build fallita!
+    ) else (
+        echo [OK] Build completata. Controlla la cartella 'dist'.
+    )
+    pause
+    goto :eof
+
+:projectinfo
+    echo.
+    echo --- Informazioni di Debug ---
+    echo Percorso Progetto: %PROJECTROOT%
+    echo.
+    echo --- Contenuto Cartelle ---
+    echo Backend: 
+    dir "%BACKENDDIR%" /b
+    echo.
+    echo Frontend:
+    dir "%FRONTENDDIR%" /b
+    echo.
+    echo Data:
+    dir "%DATADIR%" /b
+    echo.
+    echo [3/3] Dipendenze principali installate (Frontend):
+    cd /d "%FRONTENDDIR%"
+    npm list --depth=0
+    cd /d "%PROJECTROOT%"
+    echo.
+
+    pause
+    goto :eof
+
+:shownodeprocesses
+    echo.
+    echo --- Processi Node.js Attivi ---
+    tasklist | findstr "node.exe"
+    echo.
+    pause
+    goto :eof
+
+:exitscript
+    call :killallnode
+    exit

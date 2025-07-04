@@ -10,7 +10,6 @@ import Dashboard from './pages/Dashboard';
 import Deadlines from './pages/Deadlines';
 import Properties from './pages/Properties';
 import Vehicles from './pages/Vehicles';
-import Expenses from './pages/Expenses';
 import Bookings from './pages/Bookings';
 import Workouts from './pages/Workouts';
 import Events from './pages/Events';
@@ -18,8 +17,9 @@ import Documents from './pages/Documents';
 import Contacts from './pages/Contacts'; // 📞 NUOVA PAGINA
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
+import ExpensesPage from './pages/Expenses';
 
-function App() {
+const App = () => {
   return (
     <LanguageProvider>
       <ThemeProvider>
@@ -29,9 +29,9 @@ function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/deadlines" element={<Deadlines />} />
+                <Route path="/expenses" element={<ExpensesPage />} />
                 <Route path="/properties" element={<Properties />} />
                 <Route path="/vehicles" element={<Vehicles />} />
-                <Route path="/expenses" element={<Expenses />} />
                 <Route path="/bookings" element={<Bookings />} />
                 <Route path="/workouts" element={<Workouts />} />
                 <Route path="/events" element={<Events />} />

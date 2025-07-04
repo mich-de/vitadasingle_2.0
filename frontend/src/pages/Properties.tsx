@@ -1,74 +1,73 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { apiService } from '../services/apiService';
-
-interface PropertyItem {
-  id: string;
-  name: string;
-  address: string;
-  type: string;
-  size: number;
-  purchaseDate: string;
-  purchasePrice: number;
-  currentValue: number;
-  notes: string;
-  documents?: string[];
-  expenses?: {
-    imu?: number;
-    tari?: number;
-    condominio?: number;
-  };
-}
+import { useProperties } from '../hooks/useProperties';
+import PropertyFormModal from '../components/modals/PropertyFormModal';
+import type { Property, CreatePropertyInput, UpdatePropertyInput } from '../types/entities/property';
 
 const Properties = () => {
   const { t } = useLanguage();
-  const [properties, setProperties] = useState<PropertyItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedProperty, setSelectedProperty] = useState<PropertyItem | null>(null);
+  const { 
+    properties, 
+    loading, 
+    error, 
+    addProperty, 
+    updateProperty, 
+    deleteProperty, 
+    fetchProperties 
+  } = useProperties();
+  
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentProperty, setCurrentProperty] = useState<Property | null>(null);
 
-  useEffect(() => {
-    fetchProperties();
-  }, []);
+  const handleDeleteProperty = async (id: string) => {
+    if (!confirm('Sei sicuro di voler eliminare questa proprietà?')) return;
+    
+    await deleteProperty(id);
 
-  const fetchProperties = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Legge OBBLIGATORIAMENTE dal JSON tramite API
-      const data = await apiService.getProprieta();
-      setProperties(data);
-      
-    } catch (error) {
-      console.error('Errore caricamento proprietà:', error);
-      setError('Impossibile caricare le proprietà dal database JSON');
-    } finally {
-      setLoading(false);
+    if (selectedProperty?.id === id) {
+      setSelectedProperty(null);
     }
   };
 
-  const deleteProperty = async (id: string) => {
-    if (!confirm('Sei sicuro di voler eliminare questa proprietà?')) return;
-    
+  const handleAddProperty = () => {
+    setIsEditing(false);
+    setCurrentProperty(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditProperty = (property: Property) => {
+    setIsEditing(true);
+    setCurrentProperty(property);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveProperty = async (propertyData: CreatePropertyInput | UpdatePropertyInput) => {
     try {
-      // Elimina dal JSON tramite API
-      await apiService.deleteProprieta(id);
-      
-      // Aggiorna lo stato locale
-      setProperties(properties.filter(p => p.id !== id));
-      
-      // Deseleziona se era selezionata
-      if (selectedProperty?.id === id) {
-        setSelectedProperty(null);
+      if (isEditing && currentProperty) {
+        const updatedProperty = await updateProperty(currentProperty.id, propertyData as UpdatePropertyInput);
+        
+        // Update selected property if it's the one being edited
+        if (selectedProperty && selectedProperty.id === currentProperty.id) {
+          setSelectedProperty(updatedProperty);
+        }
+      } else {
+        await addProperty(propertyData as CreatePropertyInput);
       }
+      
+      // Close modal
+      setIsModalOpen(false);
     } catch (error) {
-      console.error('Errore eliminazione proprietà:', error);
-      setError('Impossibile eliminare la proprietà');
+      console.error('Error saving property:', error);
+      // The hook will set the error state, but you might want a local error for the modal
     }
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('it-IT', {
       day: '2-digit',
@@ -81,10 +80,10 @@ const Properties = () => {
     return new Intl.NumberFormat('it-IT', {
       style: 'currency',
       currency: 'EUR'
-    }).format(amount);
+    }).format(amount || 0);
   };
 
-  const handlePropertySelect = (property: PropertyItem) => {
+  const handlePropertySelect = (property: Property) => {
     setSelectedProperty(property);
   };
 
@@ -127,7 +126,10 @@ const Properties = () => {
             🏠 Dati caricati da: <code>/data/proprieta.json</code>
           </p>
         </div>
-        <button className="px-4 py-2 bg-primary-light text-white rounded-md hover:bg-primary-light/90 transition duration-200 dark:bg-primary-dark dark:hover:bg-primary-dark/90">
+        <button 
+          onClick={handleAddProperty}
+          className="px-4 py-2 bg-primary-light text-white rounded-md hover:bg-primary-light/90 transition duration-200 dark:bg-primary-dark dark:hover:bg-primary-dark/90"
+        >
           {t('properties.addNew')}
         </button>
       </div>
@@ -187,14 +189,22 @@ const Properties = () => {
                           {property.size} m²
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary-light dark:text-text-primary-dark">
-                          {formatCurrency(property.currentValue)}
+                          {formatCurrency(property.currentValue || 0)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <button className="text-primary-light dark:text-primary-dark hover:underline mr-3">Modifica</button>
+                          <button 
+                            className="text-primary-light dark:text-primary-dark hover:underline mr-3"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditProperty(property);
+                            }}
+                          >
+                            Modifica
+                          </button>
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
-                              deleteProperty(property.id);
+                              handleDeleteProperty(property.id);
                             }}
                             className="text-red-600 dark:text-red-400 hover:underline">
                             Elimina
@@ -230,37 +240,37 @@ const Properties = () => {
                   </div>
                   <div>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Data acquisto</p>
-                    <p className="text-text-primary-light dark:text-text-primary-dark">{formatDate(selectedProperty.purchaseDate)}</p>
+                    <p className="text-text-primary-light dark:text-text-primary-dark">{formatDate(selectedProperty.purchaseDate || '')}</p>
                   </div>
                   <div>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Prezzo acquisto</p>
-                    <p className="text-text-primary-light dark:text-text-primary-dark">{formatCurrency(selectedProperty.purchasePrice)}</p>
+                    <p className="text-text-primary-light dark:text-text-primary-dark">{formatCurrency(selectedProperty.purchasePrice || 0)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Valore attuale</p>
-                    <p className="font-medium text-text-primary-light dark:text-text-primary-dark">{formatCurrency(selectedProperty.currentValue)}</p>
+                    <p className="font-medium text-text-primary-light dark:text-text-primary-dark">{formatCurrency(selectedProperty.currentValue || 0)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Variazione valore</p>
-                    <p className={`font-medium ${selectedProperty.currentValue > selectedProperty.purchasePrice ? 'text-green-500' : 'text-red-500'}`}>
-                      {formatCurrency(selectedProperty.currentValue - selectedProperty.purchasePrice)}
-                      &nbsp;({Math.round((selectedProperty.currentValue - selectedProperty.purchasePrice) / selectedProperty.purchasePrice * 100)}%)
+                    <p className={`font-medium ${(selectedProperty.currentValue || 0) > (selectedProperty.purchasePrice || 0) ? 'text-green-500' : 'text-red-500'}`}>
+                      {formatCurrency((selectedProperty.currentValue || 0) - (selectedProperty.purchasePrice || 0))}
+                      &nbsp;({Math.round(((selectedProperty.currentValue || 0) - (selectedProperty.purchasePrice || 0)) / (selectedProperty.purchasePrice || 1) * 100)}%)
                     </p>
                   </div>
                 </div>
 
-                {selectedProperty.expenses && (
+                {(selectedProperty as any).expenses && (
                   <div className="mt-4">
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark mb-2">Spese annuali</p>
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      {selectedProperty.expenses.imu && (
-                        <div>IMU: {formatCurrency(selectedProperty.expenses.imu)}</div>
+                      {(selectedProperty as any).expenses.imu && (
+                        <div>IMU: {formatCurrency((selectedProperty as any).expenses.imu)}</div>
                       )}
-                      {selectedProperty.expenses.tari && (
-                        <div>TARI: {formatCurrency(selectedProperty.expenses.tari)}</div>
+                      {(selectedProperty as any).expenses.tari && (
+                        <div>TARI: {formatCurrency((selectedProperty as any).expenses.tari)}</div>
                       )}
-                      {selectedProperty.expenses.condominio && (
-                        <div>Condominio: {formatCurrency(selectedProperty.expenses.condominio)}</div>
+                      {(selectedProperty as any).expenses.condominio && (
+                        <div>Condominio: {formatCurrency((selectedProperty as any).expenses.condominio)}</div>
                       )}
                     </div>
                   </div>
@@ -272,7 +282,10 @@ const Properties = () => {
                 </div>
                 
                 <div className="flex space-x-3 mt-6">
-                  <button className="px-4 py-2 bg-primary-light text-white rounded-md hover:bg-primary-light/90 transition duration-200 dark:bg-primary-dark dark:hover:bg-primary-dark/90">
+                  <button 
+                    onClick={() => handleEditProperty(selectedProperty)}
+                    className="px-4 py-2 bg-primary-light text-white rounded-md hover:bg-primary-light/90 transition duration-200 dark:bg-primary-dark dark:hover:bg-primary-dark/90"
+                  >
                     Modifica
                   </button>
                   <button className="px-4 py-2 border border-border-light dark:border-border-dark rounded-md hover:bg-background-light/50 dark:hover:bg-background-dark/50 transition duration-200 text-text-primary-light dark:text-text-primary-dark">
@@ -290,6 +303,15 @@ const Properties = () => {
           )}
         </div>
       </div>
+
+      {/* Property Form Modal */}
+      <PropertyFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveProperty}
+        property={currentProperty as Property}
+        isEditing={isEditing}
+      />
     </div>
   );
 };

@@ -8,7 +8,7 @@ import type {
   DeadlineFilters,
   SortField,
   SortOrder
-} from '@/types';
+} from '../types';
 
 // Componente principale
 const Deadlines: React.FC = () => {

@@ -11,10 +11,10 @@ import type {
   Workout, 
   Profile, 
   DashboardStats 
-} from '@/types';
+} from '../types';
 
 // Import Booking type separately to debug
-import type { Booking } from '@/types/entities/booking';
+import type { Booking } from '../types/entities/booking';
 
 // Re-export for debugging
 export type { Booking };
@@ -202,6 +202,11 @@ class ApiService {
     return this.delete<Vehicle>(`/veicoli/${id}`);
   }
 
+  // === DASHBOARD API ===
+  async getDashboardSummary(): Promise<DashboardStats> {
+    return this.get<DashboardStats>('/dashboard');
+  }
+
   // === BOOKINGS API ===
   async getBookings(): Promise<Booking[]> {
     return this.get<Booking[]>('/bookings');
@@ -245,7 +250,7 @@ class ApiService {
     return this.put<Profile>('/profile', profile);
   }
 
-  // === DASHBOARD API ===
+  // No duplicate method needed as getDashboardSummary is already defined above
   async getDashboard(): Promise<DashboardStats> {
     return this.get<DashboardStats>('/dashboard');
   }

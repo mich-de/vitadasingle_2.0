@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
+import { Globe, Palette, Bell, Check, Sun, Moon, Save } from 'lucide-react';
 
 const Settings = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -198,7 +201,7 @@ const Settings = () => {
             <Toggle
               checked={notifications.expenses}
               onChange={(checked) => handleNotificationChange('expenses', checked)}
-              label={t('settings.expenseNotifications')}
+              label={t('settings.expenseReminders')}
             />
             <Toggle
               checked={notifications.bookings}
@@ -207,138 +210,7 @@ const Settings = () => {
             />
           </div>
         </SettingCard>
-
-        <SettingCard
-          icon={Shield}
-          title={t('settings.privacy')}
-          description={t('settings.privacyDesc')}
-        >
-          <div className="space-y-3">
-            <button className="w-full text-left p-3 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark transition-colors">
-              <div className="font-medium text-text-primary-light dark:text-text-primary-dark">
-                {t('settings.exportData.title')}
-              </div>
-              <div className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                {t('settings.exportData.desc')}
-              </div>
-            </button>
-            <button className="w-full text-left p-3 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark transition-colors">
-              <div className="font-medium text-text-primary-light dark:text-text-primary-dark">
-                {t('settings.cookieManagement.title')}
-              </div>
-              <div className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                {t('settings.cookieManagement.desc')}
-              </div>
-            </button>
-          </div>
-        </SettingCard>
-
-        <SettingCard
-          icon={User}
-          title={t('settings.account')}
-          description={t('settings.accountDesc')}
-        >
-          <div className="space-y-3">
-            <Link 
-              to="/profile"
-              className="w-full flex items-center justify-between p-3 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark transition-colors group"
-            >
-              <div>
-                <div className="font-medium text-text-primary-light dark:text-text-primary-dark group-hover:text-primary-light dark:group-hover:text-primary-dark">
-                  {t('settings.editProfile')}
-                </div>
-                <div className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                  Gestisci le tue informazioni personali
-                </div>
-              </div>
-              <ExternalLink size={16} className="text-text-secondary-light dark:text-text-secondary-dark group-hover:text-primary-light dark:group-hover:text-primary-dark transition-colors" />
-            </Link>
-            <button className="w-full text-left p-3 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark transition-colors">
-              <div className="font-medium text-text-primary-light dark:text-text-primary-dark">
-                {t('settings.changePassword')}
-              </div>
-              <div className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                Modifica la tua password di accesso
-              </div>
-            </button>
-          </div>
-        </SettingCard>
-
-        <SettingCard
-          icon={Info}
-          title={t('settings.about')}
-          description={t('settings.aboutDesc')}
-        >
-          <div className="space-y-3">
-            <div className="flex justify-between items-center py-2">
-              <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                {t('settings.version')}
-              </span>
-              <span className="text-sm font-medium text-text-primary-light dark:text-text-primary-dark">
-                1.0.0
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                {t('settings.developer')}
-              </span>
-              <span className="text-sm font-medium text-text-primary-light dark:text-text-primary-dark">
-                VitaApp Team
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                {t('settings.lastUpdate')}
-              </span>
-              <span className="text-sm font-medium text-text-primary-light dark:text-text-primary-dark">
-                26 Giugno 2025
-              </span>
-            </div>
-            <div className="pt-2 border-t border-border-light dark:border-border-dark">
-              <button className="text-sm text-primary-light dark:text-primary-dark hover:underline">
-                {t('settings.releaseNotes')}
-              </button>
-              <span className="mx-2 text-text-secondary-light dark:text-text-secondary-dark">•</span>
-              <button className="text-sm text-primary-light dark:text-primary-dark hover:underline">
-                {t('settings.support')}
-              </button>
-              <span className="mx-2 text-text-secondary-light dark:text-text-secondary-dark">•</span>
-              <button className="text-sm text-primary-light dark:text-primary-dark hover:underline">
-                {t('settings.privacyPolicy')}
-              </button>
-            </div>
-          </div>
-        </SettingCard>
       </div>
-
-      {hasChanges && (
-        <div className="bg-card-light dark:bg-card-dark p-4 rounded-xl shadow-soft border-l-4 border-primary-light dark:border-primary-dark">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium text-text-primary-light dark:text-text-primary-dark">
-                {t('settings.unsavedChanges.title')}
-              </h4>
-              <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                {t('settings.unsavedChanges.desc')}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <button 
-                onClick={() => setHasChanges(false)}
-                className="px-4 py-2 text-text-secondary-light dark:text-text-secondary-dark hover:bg-background-light dark:hover:bg-background-dark rounded-lg transition-colors"
-              >
-                {t('settings.cancel')}
-              </button>
-              <button 
-                onClick={handleSave}
-                className="px-4 py-2 bg-primary-light dark:bg-primary-dark text-white rounded-lg hover:opacity-90 transition-opacity"
-              >
-                {t('settings.save')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

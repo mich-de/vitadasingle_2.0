@@ -43,7 +43,7 @@ export function useApi() {
         ...(body && method !== 'GET' && { body: JSON.stringify(body) })
       };
 
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
       const url = endpoint.startsWith('/') ? `${baseUrl}/api${endpoint}` : `${baseUrl}/api/${endpoint}`;
       
       const response = await fetch(url, config);

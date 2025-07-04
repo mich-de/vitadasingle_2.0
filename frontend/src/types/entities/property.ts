@@ -7,6 +7,7 @@ export interface Property {
   address?: string;
   type: PropertyType;
   status: PropertyStatus;
+  size?: number;
   purchaseDate?: string;
   purchasePrice?: number;
   currentValue?: number;
@@ -23,6 +24,7 @@ export interface CreatePropertyInput {
   address?: string;
   type: PropertyType;
   status: PropertyStatus;
+  size?: number;
   purchaseDate?: string;
   purchasePrice?: number;
   currentValue?: number;
@@ -34,6 +36,7 @@ export interface UpdatePropertyInput {
   address?: string;
   type?: PropertyType;
   status?: PropertyStatus;
+  size?: number;
   purchaseDate?: string;
   purchasePrice?: number;
   currentValue?: number;

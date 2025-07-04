@@ -1,5 +1,8 @@
 // src/types/entities/vehicle.ts
 
+export type VehicleType = 'car' | 'motorcycle' | 'van' | 'other';
+export type VehicleStatus = 'active' | 'sold' | 'maintenance';
+
 export interface Vehicle {
   id: string;
   userId: string;
@@ -8,6 +11,11 @@ export interface Vehicle {
   year?: number;
   licensePlate?: string;
   vin?: string;
+  type: VehicleType;
+  status: VehicleStatus;
+  purchaseDate?: string;
+  purchasePrice?: number;
+  currentValue?: number;
   insuranceExpiry?: string;
   inspectionExpiry?: string;
   notes?: string;
@@ -21,6 +29,11 @@ export interface CreateVehicleInput {
   year?: number;
   licensePlate?: string;
   vin?: string;
+  type: VehicleType;
+  status: VehicleStatus;
+  purchaseDate?: string;
+  purchasePrice?: number;
+  currentValue?: number;
   insuranceExpiry?: string;
   inspectionExpiry?: string;
   notes?: string;
@@ -32,6 +45,11 @@ export interface UpdateVehicleInput {
   year?: number;
   licensePlate?: string;
   vin?: string;
+  type?: VehicleType;
+  status?: VehicleStatus;
+  purchaseDate?: string;
+  purchasePrice?: number;
+  currentValue?: number;
   insuranceExpiry?: string;
   inspectionExpiry?: string;
   notes?: string;
